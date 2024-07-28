@@ -1,0 +1,39 @@
+# Rust build artifacts
+/target/
+
+# Environment variables file
+.env
+
+# Rust-specific
+**/*.rs.bk
+Cargo.lock
+
+# Editor-specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+
+# Log files
+*.log
+
+# Database files
+*.db
+*.sqlite
+
+# Compiled files
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Generated documentation
+/doc/
