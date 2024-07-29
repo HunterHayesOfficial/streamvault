@@ -43,6 +43,7 @@ StreamVault uses a `.env` file for configuration:
 YOUTUBE_API_KEY=your_youtube_api_key_here
 CHECK_INTERVAL=60
 DATABASE_PATH=/path/to/your/database/streamvault.db
+DISCORD_TOKEN=your_discord_bot_token_here  # Optional: remove if not using Discord bot
 ```
 
 ## Usage
@@ -58,9 +59,35 @@ DATABASE_PATH=/path/to/your/database/streamvault.db
 
 4. Recorded videos and chat logs are saved in `~/streamvault/[channel_name]/` directory.
 
+## Changelog
+
+### [0.1.1] - 2023-07-29
+
+#### Added
+- Discord bot integration with the following commands:
+  - `/subscribers`: Lists all subscribed YouTube channels
+  - `/add_subscriber`: Adds a new YouTube channel to watch for live streams
+  - `/remove_subscriber`: Removes a YouTube channel from the watch list
+- Improved feedback for subscriber management, including notifications for successful additions and removals, and error messages for failed operations
+
+#### Changed
+- Updated `install.sh` script to accommodate Discord bot integration
+
+#### Note
+- Discord bot integration is optional. To run StreamVault without Discord functionality, simply remove the `DISCORD_TOKEN` from the `.env` file
+
+### [0.1.0] - 2023-07-28
+
+#### Added
+- Initial release of StreamVault
+- YouTube live stream monitoring and recording
+- Chat log downloading for recorded streams
+- Multi-channel support
+- Configurable check interval for live stream detection
+
 ## Future Improvements
 
-- Discord integration
+- ~~Discord integration~~
 - Web interface for watching archived streams with chat replay
 - Content management system
 - Multi-platform support

@@ -36,12 +36,30 @@ check_interval=${check_interval:-60}
 echo "Enter the database path (default: $HOME/streamvault.db):"
 read -r db_path
 db_path=${db_path:-$HOME/streamvault.db}
+# ask question do you want to use as discord bot?
+echo "Do you want to use StreamVault as a Discord bot? (y/n)"
+read -r discord_bot
+if [[ $discord_bot =~ ^[Yy]$ ]]
+then
+    echo "Please enter your Discord bot token:"
+    read -r discord_token
+fi
 
+if [[ $discord_bot =~ ^[Yy]$ ]]
+then
+cat > .env << EOL
+YOUTUBE_API_KEY=$api_key
+CHECK_INTERVAL=$check_interval
+DATABASE_PATH=$db_path
+DISCORD_TOKEN=$discord_token
+EOL
+else
 cat > .env << EOL
 YOUTUBE_API_KEY=$api_key
 CHECK_INTERVAL=$check_interval
 DATABASE_PATH=$db_path
 EOL
+fi
 
 echo ".env file created successfully!"
 

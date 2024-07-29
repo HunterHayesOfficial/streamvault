@@ -6,12 +6,14 @@ use std::error::Error;
 use std::env;
 use std::io::{self, Write};
 use dotenv::dotenv;
+use std::sync::Arc;
 use services::database::Database;
 use services::recorder::Recorder;
 use services::chat;
 use api::youtube::YouTubeClient;
 use chrono::Utc;
 use functions::sanitize::sanitize_filename;
+use services::discord::run_discord_bot;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -19,6 +21,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let db_path = env::var("DATABASE_PATH").unwrap_or_else(|_| "streamvault.db".to_string());
     let database = Database::init(&db_path)?;
+    let database = Arc::new(database);
 
     let check_interval = env::var("CHECK_INTERVAL")
         .unwrap_or_else(|_| "60".to_string())
@@ -26,6 +29,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let youtube_client = YouTubeClient::new().await?;
     let recorder = Recorder::new(youtube_client.clone());
+
+    if let Ok(_token) = env::var("DISCORD_TOKEN"){
+        {
+            let database_clone = Arc::clone(&database);
+            let youtube_client_clone = Arc::new(youtube_client.clone());
+            tokio::spawn(async move {
+                run_discord_bot(database_clone, youtube_client_clone).await;
+            });
+        }
+        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+    }
+    
 
     println!("Do you want to add a YouTuber to the database? (y/n)");
     let mut input = String::new();
@@ -38,9 +53,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         io::stdin().read_line(&mut channel_name)?;
         channel_name = channel_name.trim().to_string();
 
+        let db = Arc::clone(&database);
         match youtube_client.get_channel_id_by_name(&channel_name).await {
             Ok(channel_id) => {
-                database.add_streamer(&channel_name, &channel_id)?;
+                db.add_streamer(&channel_name, &channel_id)?;
                 println!("Added {} with channel ID {} to the database", channel_name, channel_id);
             }
             Err(e) => {
@@ -51,7 +67,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     loop {
-        let streamers = database.get_streamers()?;
+        let streamers = {
+            let db = Arc::clone(&database);
+            db.get_streamers()?
+        };
 
         for streamer in streamers {
             if recorder.is_live(&streamer).await? {

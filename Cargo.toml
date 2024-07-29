@@ -1,6 +1,6 @@
 [package]
 name = "streamvault"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Hunter hayes <hunterhayesofficial@protonmail.com>"]
 description = "A Rust application that records YouTube live streams and downloads chat logs"
@@ -15,3 +15,6 @@ chrono = "0.4"
 dirs = "5.0"
 rusqlite = { version = "0.29", features = ["bundled"] }
 regex = "1.8"
+serenity = { version = "0.11", default-features = false, features = ["client", "gateway", "rustls_backend", "model"] }
+async-trait = "0.1.50"
+futures = "0.3.17"

@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 use std::error::Error;
+use std::sync::{Arc, Mutex};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Streamer {
@@ -11,8 +12,9 @@ pub struct Streamer {
     pub channel_id: String,
 }
 
+#[derive(Clone)]
 pub struct Database {
-    conn: Connection,
+    conn: Arc<Mutex<Connection>>,
 }
 
 impl Database {
@@ -30,11 +32,12 @@ impl Database {
             )",
             [],
         )?;
-        Ok(Self { conn })
+        Ok(Self { conn: Arc::new(Mutex::new(conn)) })
     }
 
     pub fn get_streamers(&self) -> SqliteResult<Vec<Streamer>> {
-        let mut stmt = self.conn.prepare("SELECT id, name, channel_id FROM streamers")?;
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare("SELECT id, name, channel_id FROM streamers")?;
         let streamer_iter = stmt.query_map([], |row| {
             Ok(Streamer {
                 id: row.get(0)?,
@@ -51,10 +54,20 @@ impl Database {
     }
 
     pub fn add_streamer(&self, name: &str, channel_id: &str) -> SqliteResult<()> {
-        self.conn.execute(
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
             "INSERT INTO streamers (name, channel_id) VALUES (?1, ?2)",
             &[name, channel_id],
         )?;
         Ok(())
+    }
+
+    pub fn remove_streamer(&self, channel_id: &str) -> SqliteResult<bool> {
+        let conn = self.conn.lock().unwrap();
+        let rows_affected = conn.execute(
+            "DELETE FROM streamers WHERE channel_id = ?1",
+            &[channel_id],
+        )?;
+        Ok(rows_affected > 0)
     }
 }
